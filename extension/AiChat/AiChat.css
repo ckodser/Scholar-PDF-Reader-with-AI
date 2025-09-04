@@ -1,7 +1,7 @@
-/* * AiChat.css
- * Styles for the Gemini AI Chat Panel
- */
+/* AiChat.css */
+/* Styles for the Gemini AI Chat Panel */
 
+/* Light Theme (Default) */
 :root {
     --chat-bg: #ffffff;
     --chat-header-bg: #f1f3f4;
@@ -14,8 +14,35 @@
     --primary-action: #1a73e8;
     --primary-action-hover: #185abc;
     --tab-inactive-bg: #e8eaed;
+    --tab-inactive-hover: #d8dbdf;
     --code-bg: #2d2d2d;
     --code-text: #f8f8f2;
+    --overlay-bg: rgba(255, 255, 255, 0.8);
+    --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+    --destructive-action: #d93025;
+    --destructive-action-hover: #c5221f;
+}
+
+/* Dark Theme */
+#ai-chat-panel[data-theme='dark'] {
+    --chat-bg: #202124;
+    --chat-header-bg: #303134;
+    --chat-border: #44474a;
+    --chat-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --user-message-bg: #2b3a50; /* Darker blue */
+    --ai-message-bg: #3c4043;
+    --text-primary: #e8eaed;
+    --text-secondary: #bdc1c6;
+    --primary-action: #8ab4f8; /* Lighter blue for better contrast */
+    --primary-action-hover: #a6c9fa;
+    --tab-inactive-bg: #3c4043;
+    --tab-inactive-hover: #505356;
+    --code-bg: #2d2d2d; /* Stays the same, already dark */
+    --code-text: #f8f8f2;
+    --overlay-bg: rgba(32, 33, 36, 0.8);
+    --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+    --destructive-action: #f28b82; /* Lighter red for better contrast */
+    --destructive-action-hover: #f6a9a2;
 }
 
 #ai-chat-panel {
@@ -34,6 +61,7 @@
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: var(--text-primary); /* Set base text color */
 }
 
 #ai-chat-panel.expanded {
@@ -75,7 +103,7 @@
     padding: 6px; border-radius: 50%; display: inline-flex; align-items: center;
     justify-content: center; transition: background-color 0.2s;
 }
-.chat-controls button:hover { background-color: rgba(0, 0, 0, 0.08); }
+.chat-controls button:hover { background-color: rgba(255, 255, 255, 0.08); } /* Universal hover */
 
 #chat-tabs-container {
     display: flex; align-items: center; padding: 8px 8px 0 8px;
@@ -105,7 +133,7 @@
     font-size: 18px; line-height: 1; cursor: pointer; transition: background-color 0.2s;
     margin-left: 4px; flex-shrink: 0;
 }
-#chat-new-tab-btn:hover { background-color: #d8dbdf; }
+#chat-new-tab-btn:hover { background-color: var(--tab-inactive-hover); }
 
 #ai-chat-messages {
     flex-grow: 1; overflow-y: auto; padding: 16px;
@@ -145,20 +173,23 @@
     background-color: rgba(0,0,0,0.07); padding: 2px 5px;
     border-radius: 4px; font-family: 'Courier New', Courier, monospace;
 }
+#ai-chat-panel[data-theme='dark'] .message-content code {
+    background-color: rgba(255,255,255,0.1); /* Lighter bg for dark mode */
+}
 .message-content pre code { background-color: transparent; padding: 0; }
 .message-content ul, .message-content ol { padding-left: 20px; }
 .message-content blockquote {
-    border-left: 3px solid #ccc; padding-left: 10px;
-    margin-left: 0; color: #555; font-style: italic;
+    border-left: 3px solid var(--text-secondary); padding-left: 10px;
+    margin-left: 0; color: var(--text-secondary); font-style: italic;
 }
 .message-content table {
     border-collapse: collapse; width: 100%; margin: 1em 0;
 }
 .message-content th, .message-content td {
-    border: 1px solid #ddd; padding: 8px;
+    border: 1px solid var(--chat-border); padding: 8px;
 }
 .message-content th {
-    background-color: #f2f2f2;
+    background-color: var(--ai-message-bg);
 }
 
 
@@ -167,10 +198,12 @@
 #ai-chat-input {
     flex-grow: 1; border: 1px solid var(--chat-border); border-radius: 20px;
     padding: 10px 16px; font-size: 14px; outline: none; transition: border-color 0.2s;
+    background-color: var(--chat-bg);
+    color: var(--text-primary);
 }
 #ai-chat-input:focus { border-color: var(--primary-action); }
 #ai-chat-send-btn {
-    background-color: var(--primary-action); color: white; border: none;
+    background-color: var(--primary-action); color: var(--chat-bg); border: none;
     width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: background-color 0.2s; flex-shrink: 0;
@@ -180,7 +213,7 @@
 
 .chat-processing-overlay {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: var(--overlay-bg);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     z-index: 2001; border-radius: 12px; color: var(--text-primary); text-align: center;
 }
@@ -193,7 +226,6 @@
 
 .hidden { display: none !important; }
 
-
 /* --- Delete Confirmation Modal --- */
 .modal-overlay {
     position: absolute;
@@ -201,12 +233,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+    background-color: var(--modal-overlay-bg);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 3000; /* Higher than chat panel's z-index */
-    border-radius: 12px; /* Match the panel's border radius */
+    z-index: 3000;
+    border-radius: 12px;
     padding: 20px;
 }
 
@@ -251,21 +283,24 @@
 }
 
 .modal-button-yes {
-    background-color: #d93025; /* A destructive action red */
+    background-color: var(--destructive-action);
     color: white;
+}
+#ai-chat-panel[data-theme='dark'] .modal-button-yes {
+    color: var(--chat-bg); /* Darker text on lighter red */
 }
 
 .modal-button-yes:hover {
-    background-color: #c5221f;
+    background-color: var(--destructive-action-hover);
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .modal-button-no {
     background-color: var(--tab-inactive-bg);
-    color: var(--text-secondary);
+    color: var(--text-primary); /* Use primary text color */
     border: 1px solid var(--chat-border);
 }
 
 .modal-button-no:hover {
-    background-color: #d8dbdf;
+    background-color: var(--tab-inactive-hover);
 }

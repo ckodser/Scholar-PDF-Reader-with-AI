@@ -66,6 +66,16 @@ function cacheDomElements() {
 
 }
 
+// --- Theme ---
+async function applyTheme() {
+    // Await the storage call and provide a default value
+    const data = await getStorage('theme');
+    const theme = data || 'light'; // Default to light theme if nothing is set
+    if (dom.chatPanel) {
+        dom.chatPanel.dataset.theme = theme;
+    }
+}
+
 // --- Utility Functions ---
 
 function getStorage(key) {
@@ -177,6 +187,18 @@ function renderMessage(sender, text) {
 
     messageWrapper.appendChild(messageContent);
     dom.chatMessages.appendChild(messageWrapper);
+
+    // Render math expressions in the new message
+    renderMathInElement(messageContent, {
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ]
+    });
+
+
     dom.chatMessages.scrollTop = dom.chatMessages.scrollHeight;
 }
 
@@ -511,6 +533,8 @@ async function loadConversations() {
 async function initializeAiChat() {
     console.log('Initializing AI Chat...');
     cacheDomElements();
+
+    await applyTheme();
 
     await loadConversations();
 

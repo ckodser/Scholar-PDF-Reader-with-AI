@@ -16,6 +16,26 @@ function showError(message) {
     showStatus(message, 'error');
 }
 
+
+document.addEventListener('DOMContentLoaded', () => {
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+    // Load saved theme preference and set the checkbox state
+    chrome.storage.local.get('theme', (data) => {
+        if (darkModeToggle) {
+            darkModeToggle.checked = data.theme === 'dark';
+        }
+    });
+
+    // Save theme preference when the checkbox is changed
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('change', (event) => {
+            const newTheme = event.target.checked ? 'dark' : 'light';
+            chrome.storage.local.set({ theme: newTheme });
+        });
+    }
+});
+
 // Export functionality
 document.getElementById('exportBtn').addEventListener('click', async () => {
     try {
