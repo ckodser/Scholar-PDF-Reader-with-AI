@@ -49,7 +49,7 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    width: 20vw;
+    width: 350px;
     height: 70vh;
     min-width: 300px;
     min-height: 400px;
@@ -59,17 +59,19 @@
     z-index: 2000;
     display: flex;
     flex-direction: column;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     color: var(--text-primary); /* Set base text color */
 }
 
 #ai-chat-panel.expanded {
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     width: 700px;
     max-width: 90vw;
     height: 85vh;
+    right: auto; /* Override initial right positioning */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chat-header {
@@ -81,6 +83,7 @@
     background-color: var(--chat-header-bg);
     border-radius: 12px 12px 0 0;
     flex-shrink: 0;
+    cursor: move;
 }
 
 .chat-header h3 {
@@ -304,3 +307,18 @@
 .modal-button-no:hover {
     background-color: var(--tab-inactive-hover);
 }
+
+/* --- Resizer Styles --- */
+.resizer {
+    position: absolute;
+    background: transparent;
+    z-index: 10;
+}
+.resizer-n { top: -5px; left: 0; right: 0; height: 10px; cursor: n-resize; }
+.resizer-s { bottom: -5px; left: 0; right: 0; height: 10px; cursor: s-resize; }
+.resizer-w { left: -5px; top: 0; bottom: 0; width: 10px; cursor: w-resize; }
+.resizer-e { right: -5px; top: 0; bottom: 0; width: 10px; cursor: e-resize; }
+.resizer-nw { top: -5px; left: -5px; width: 10px; height: 10px; cursor: nwse-resize; }
+.resizer-ne { top: -5px; right: -5px; width: 10px; height: 10px; cursor: nesw-resize; }
+.resizer-sw { bottom: -5px; left: -5px; width: 10px; height: 10px; cursor: nwse-resize; }
+.resizer-se { bottom: -5px; right: -5px; width: 10px; height: 10px; cursor: nesw-resize; }
