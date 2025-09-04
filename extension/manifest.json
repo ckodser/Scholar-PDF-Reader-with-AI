@@ -92,7 +92,7 @@
         ]
     },
     "content_security_policy": {
-        "extension_pages": "child-src 'self'; script-src 'self'; object-src 'self'; worker-src 'self'; frame-src 'self'",
+        "extension_pages": "child-src 'self'; script-src 'self'; object-src 'self'; worker-src 'self'; frame-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self';",
         "sandbox": "sandbox allow-downloads allow-scripts; script-src 'self' blob:; frame-src 'self'"
     },
     "web_accessible_resources": [
