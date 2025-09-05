@@ -153,6 +153,7 @@ function makeResizable(panel) {
     }
 }
 
+
 async function toggleChatPanel() {
     aiChatState.isPanelOpen = !aiChatState.isPanelOpen;
     dom.chatPanel.classList.toggle('hidden', !aiChatState.isPanelOpen);
@@ -185,6 +186,7 @@ function toggleChatSize() {
     hideDeleteConfirmation();
     dom.chatDeleteBtn.classList.toggle('hidden', !aiChatState.isPanelExpanded);
 }
+
 
 // --- Initialization ---
 
@@ -231,14 +233,19 @@ async function initializeAiChat() {
         await deleteAllMessages();
         hideDeleteConfirmation();
     });
+    dom.chatInput.addEventListener('input', (e) => autoResizeTextarea(e.target));
 
+    // This listener handles the sending logic.
     dom.chatInput.addEventListener('keydown', (e) => {
+        // We only act when 'Enter' is pressed WITHOUT the 'Shift' key.
         if (e.key === 'Enter' && !e.shiftKey) {
+            // Prevent the default action (which would be to add a newline).
             e.preventDefault();
             handleSendMessage();
         }
+        // For all other keys, including Shift + Enter, we do nothing and let the
+        // browser perform its default action (like adding a newline).
     });
-
     dom.popoutBtn.addEventListener('click', () => {
         const rect = dom.chatPanel.getBoundingClientRect();
         const url = chrome.runtime.getURL(`AiChat/popout.html?pdf=${encodeURIComponent(aiChatState.pdfId)}`);
@@ -260,6 +267,8 @@ async function initializeAiChat() {
             }
         });
     });
+
+
 }
 
 document.addEventListener('DOMContentLoaded', initializeAiChat);

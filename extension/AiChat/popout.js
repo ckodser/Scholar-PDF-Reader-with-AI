@@ -56,7 +56,7 @@ async function initializePopoutChat() {
         await deleteAllMessages();
         hideDeleteConfirmation();
     });
-
+    dom.chatInput.addEventListener('input', (e) => autoResizeTextarea(e.target));
     dom.chatInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();

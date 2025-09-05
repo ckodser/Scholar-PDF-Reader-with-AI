@@ -184,6 +184,24 @@ function renderMessage(sender, text) {
     dom.chatMessages.scrollTop = dom.chatMessages.scrollHeight;
 }
 
+// This function remains the same as the last version
+function autoResizeTextarea(textarea) {
+    const maxHeight = 7 * 20; // 7 lines * 20px line-height (defined in AiChat.css)
+
+    // Reset height to auto to let the browser calculate the natural scrollHeight
+    textarea.style.height = 'auto';
+    const scrollHeight = textarea.scrollHeight;
+
+    // Apply the new height
+    if (scrollHeight > maxHeight) {
+        textarea.style.height = `${maxHeight}px`;
+        textarea.style.overflowY = 'auto'; // Show scrollbar when maxed out
+    } else {
+        textarea.style.height = `${scrollHeight}px`;
+        textarea.style.overflowY = 'hidden'; // Hide scrollbar when not needed
+    }
+}
+
 function renderTabs() {
     while (dom.tabsContainer.firstChild && dom.tabsContainer.firstChild.id !== 'chat-new-tab-btn') {
         dom.tabsContainer.removeChild(dom.tabsContainer.firstChild);
