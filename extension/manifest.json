@@ -10,6 +10,10 @@
     },
     "version": "0.2.4.0",
     "minimum_chrome_version": "110.0",
+    "author": {
+        "name": "Arshia Soltani Moakhar",
+        "email": "arshia.soltani2@gmail.com"
+    },
     "permissions": [
         "webNavigation",
         "webRequest",
@@ -17,7 +21,8 @@
         "scripting",
         "storage",
         "offscreen",
-        "clipboardWrite"
+        "clipboardWrite",
+        "windows"
     ],
     "host_permissions": [
         "<all_urls>"
@@ -99,15 +104,23 @@
         {
             "resources": [
                 "reader.html",
-                "pdf_loader_iframe.html"
+                "pdf_loader_iframe.html",
+                "reader-prod.css",
+                "reader-compiled.js",
+                "pdf.min.js",
+                "pdf.worker.min.js",
+                "annotation/*",
+                "tts/*",
+                "AiChat/*",
+                "katex.min.css",
+                "katex.min.js",
+                "auto-render.min.js",
+                "marked.min.js"
             ],
             "matches": [
                 "<all_urls>"
             ]
         }
     ],
-    "options_page": "annotation/settings.html",
-    "author": {
-        "email": "mcomajoancara@gmail.com"
-    }
+    "options_page": "annotation/settings.html"
 }

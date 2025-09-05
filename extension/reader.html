@@ -13,6 +13,7 @@
   <script src="/reader-compiled.js" defer></script>
   <script src="/annotation/annotation.js" defer></script>
   <script src="/tts/tts.js" defer></script>
+    <script src="/AiChat/AiChat.common.js" defer></script>
   <script src="/AiChat/AiChat.js" defer></script>
   <script src="pdf.min.js" defer></script>
   <script src="pdf.worker.min.js" defer></script>
@@ -52,6 +53,9 @@
         <div class="chat-controls">
             <button id="ai-chat-delete-btn" title="Delete All Chats">
                 <span class="material-symbols-outlined">delete_forever</span>
+            </button>
+            <button id="ai-chat-popout-btn" title="Pop-out Chat" class="hidden">
+                <span class="material-symbols-outlined">open_in_new</span>
             </button>
             <button id="ai-chat-resize-btn" title="Toggle Size">
                 <span class="material-symbols-outlined">open_in_full</span>

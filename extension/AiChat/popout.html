@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AI Chat</title>
+  <link rel="stylesheet" href="../annotation/annotation.css"> <link rel="stylesheet" href="/AiChat/AiChat.css">
+  <link rel="stylesheet" href="/AiChat/popout.css"> <link rel="stylesheet" href="../katex.min.css"> <script src="/marked.min.js"></script>
+  <script src="/AiChat/AiChat.common.js" defer></script>
+  <script src="/AiChat/popout.js" defer></script>
+  <script defer src="../katex.min.js"></script>
+  <script defer src="../auto-render.min.js"></script>
+
+</head>
+<body>
+  <div id="ai-chat-panel" class="popout-view">
+    <div class="chat-header">
+        <h3>
+            <span class="material-symbols-outlined">network_intelligence</span>
+            <span id="chat-header-title">Chat with PDF</span>
+        </h3>
+        <div class="chat-controls">
+            <button id="ai-chat-delete-btn" title="Delete All Chats">
+                <span class="material-symbols-outlined">delete_forever</span>
+            </button>
+        </div>
+    </div>
+    <div id="chat-tabs-container">
+        <button id="chat-new-tab-btn" title="New Chat">+</button>
+    </div>
+    <div id="ai-chat-messages">
+        </div>
+    <div class="chat-footer">
+        <div class="chat-input-area">
+            <input type="text" id="ai-chat-input" placeholder="Ask a question about the PDF...">
+            <button id="ai-chat-send-btn" title="Send Message">
+                <span class="material-symbols-outlined">send</span>
+            </button>
+        </div>
+    </div>
+    <div id="chat-processing-overlay" class="chat-processing-overlay hidden">
+        <div class="loader"></div>
+        <p>Analyzing PDF...</p>
+    </div>
+    <div id="ai-chat-delete-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Delete All Chats</h3>
+            <p>Are you sure you want to delete all chat history for this PDF? This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button id="ai-chat-confirm-delete-yes" class="modal-button-yes">Yes, Delete All</button>
+                <button id="ai-chat-confirm-delete-no" class="modal-button-no">Cancel</button>
+            </div>
+        </div>
+    </div>
+  </div>
+</body>
+</html>

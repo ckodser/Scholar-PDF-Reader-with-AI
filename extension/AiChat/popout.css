@@ -1,0 +1,50 @@
+/* popout.css */
+/* Styles for the fullscreen pop-out chat window */
+
+/* Remove default browser margins and make body fill the viewport */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Prevent scrollbars on the body itself */
+}
+
+/*
+ Override the default panel styles for the pop-out view
+ to make it fill the entire window without borders or shadows.
+*/
+#ai-chat-panel.popout-view {
+    /* Override positioning */
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    transform: none;
+    
+    /* Fill the entire viewport */
+    width: 100vw;
+    height: 100vh;
+    
+    /* Remove panel appearance */
+    border-radius: 0;
+    box-shadow: none;
+    min-width: 0;
+    min-height: 0;
+
+    /* Ensure flex container works correctly at full height */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Hide the resizer handles in the popout view */
+#ai-chat-panel.popout-view .resizer {
+    display: none;
+}
+
+/* The header is no longer a drag handle in the pop-out view */
+#ai-chat-panel.popout-view .chat-header {
+    cursor: default;
+    border-radius: 0; /* Remove rounded corners from header */
+}
