@@ -195,6 +195,11 @@
     background-color: var(--ai-message-bg);
 }
 
+.chat-message .message-content {
+    padding: 10px 14px; border-radius: 18px; font-size: 14px;
+    line-height: 1.5; word-wrap: break-word;
+    white-space: pre-wrap; /* Add this line */
+}
 
 .chat-footer { border-top: 1px solid var(--chat-border); padding: 8px; flex-shrink: 0; }
 .chat-input-area { display: flex; gap: 10px; align-items: center; }

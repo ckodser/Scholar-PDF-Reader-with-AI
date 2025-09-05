@@ -111,7 +111,7 @@ The following features are planned for future releases:
 - Underline and strikeout text.
 - Drawing tools (freehand, lines, shapes).
 - Text comments and sticky notes.
-- Movable and minimizable annotation bar/AI chat.
+- Movable and minimizable annotation bar.
 - Add more functionalities to the settings page, such as keyboard shortcut customization, annotation transfer between PDF files, and selective removal.
 
 ## Implementation Questions
