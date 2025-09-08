@@ -48,7 +48,7 @@ html, body {
     cursor: default;
     border-radius: 0; /* Remove rounded corners from header */
 }
-.chat-message .message-content {
+.chat-message.user .message-content {
     padding: 10px 14px; border-radius: 18px; font-size: 14px;
     line-height: 1.5; word-wrap: break-word;
     white-space: pre-wrap; /* Add this line */
