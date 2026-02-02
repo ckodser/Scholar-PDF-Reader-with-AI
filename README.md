@@ -1,6 +1,10 @@
 # AI Scholar PDF Reader
 
-This extension adds annotation/TTS and Ai chat capabilities to the Google Scholar PDF Reader extension. The extended features include:
+This extension adds annotation/TTS and AI chat capabilities to the Google Scholar PDF Reader extension.
+
+**Based on Google Scholar PDF Reader version 0.4.5 (December 2025)**
+
+The extended features include:
 
 - Chat with Gemini about your PDF
 - TTS for reading your PDF aloud

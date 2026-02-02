@@ -1,0 +1,1 @@
+(function(){window.addEventListener("message",b=>{const a=b.data;b.origin==="chrome-extension://dahenjhkoodjbpjheillcadbppiidmhp"&&a&&a instanceof Object&&a.type==="gsrReload"&&window.location.reload()});}).call(this);

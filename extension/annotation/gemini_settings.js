@@ -22,52 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- State ---
     const state = {
         apiKey: '',
-        selectedModel: 'gemini-2.5-flash', // A sensible default
-    };
-
-    // --- Constants ---
-    // Pricing based on per 1 million tokens.
-    // This structure now supports different prices for different input modalities.
-    const GEMINI_MODELS_DATA = {
-        'gemini-2.5-pro': {
-            name: 'Gemini 2.5 Pro',
-            desc: 'Most capable model for highly complex tasks. Larger context window.',
-            pricing: {
-                input: {
-                    text: 1.25, // Price per 1M tokens for text
-                    document: 1.25 // Placeholder price for documents
-                },
-                output: {
-                    text: 10.00 // Price per 1M tokens for text output
-                }
-            }
-        },
-        'gemini-2.5-flash': {
-            name: 'Gemini 2.5 Flash',
-            desc: 'Fast and cost-effective model for multi-modal reasoning.',
-            pricing: {
-                input: {
-                    text: 0.30, // Price per 1M tokens for text
-                    document: 0.30 // XX - Using your requested placeholder price for documents
-                },
-                output: {
-                    text: 2.50 // Price per 1M tokens for text output
-                }
-            }
-        },
-        'gemini-2.5-flash-lite-preview-06-17': {
-            name: 'Gemini 2.5 Flash-Lite (Preview)',
-            desc: 'A lighter, faster preview model for quick tasks.',
-            pricing: {
-                input: {
-                    text: 0.10,
-                    document: 0.10 // Placeholder price for documents
-                },
-                output: {
-                    text: 0.40
-                }
-            }
-        }
+        selectedModel: '',
+        availableModels: {},
     };
 
 
@@ -140,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.apiKey = apiKey;
             elements.modelSelectionContainer.style.display = 'block';
             elements.geminiUsageContainer.style.display = 'block';
-            renderModelSelection();
+            await fetchAndRenderModels();
         }
         await loadAndDisplayUsage(); // Initial load
     };
@@ -180,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 elements.modelSelectionContainer.style.display = 'block';
                 elements.geminiUsageContainer.style.display = 'block';
-                renderModelSelection();
+                await fetchAndRenderModels();
             } else {
                 const error = data.error?.message || 'Invalid API Key or insufficient permissions.';
                 throw new Error(error);
@@ -214,26 +170,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = elements.modelSelectionContainer.querySelector('#gemini-model-tier-container');
         container.innerHTML = ''; // Clear previous content
 
-        Object.keys(GEMINI_MODELS_DATA).forEach(modelKey => {
-            const modelInfo = GEMINI_MODELS_DATA[modelKey];
+        const modelKeys = Object.keys(state.availableModels);
+        if (modelKeys.length === 0) {
+            container.innerHTML = '<p class="tier-desc">No Gemini models available for this API key.</p>';
+            return;
+        }
+
+        modelKeys.forEach(modelKey => {
+            const modelInfo = state.availableModels[modelKey];
             const card = document.createElement('div');
             card.className = 'voice-tier-card';
 
-            // Build pricing details string
-            const inputPricingText = Object.entries(modelInfo.pricing.input)
-                .map(([modality, price]) => `<strong>${modality.charAt(0).toUpperCase() + modality.slice(1)}:</strong> $${price.toFixed(2)}`)
-                .join(', ');
-            const outputPricingText = `<strong>Text:</strong> $${modelInfo.pricing.output.text.toFixed(2)}`;
+            const pricingHtml = modelInfo.pricing
+                ? `
+                    <div class="tier-details">
+                        <span><strong>Input:</strong> ${modelInfo.pricing.input} / 1M tokens</span>
+                        <span><strong>Output:</strong> ${modelInfo.pricing.output} / 1M tokens</span>
+                    </div>
+                  `
+                : '';
 
             card.innerHTML = `
                 <div class="tier-header">
                     <h4>${modelInfo.name}</h4>
                 </div>
-                <p class="tier-desc">${modelInfo.desc}</p>
-                <div class="tier-details">
-                    <span><strong>Input:</strong> ${inputPricingText} / 1M tokens</span>
-                    <span><strong>Output:</strong> ${outputPricingText} / 1M tokens</span>
-                </div>
+                <p class="tier-desc">${modelInfo.desc || 'No description available.'}</p>
+                ${pricingHtml}
                 <div class="mt-3">
                     <label class="voice-option">
                         <input type="radio" name="gemini-model-selection" value="${modelKey}" ${modelKey === state.selectedModel ? 'checked' : ''}>
@@ -253,9 +215,58 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedRadio) {
             state.selectedModel = selectedRadio.value;
             setStorage('selectedGeminiModel', state.selectedModel);
-            showStatus(`Model set to ${GEMINI_MODELS_DATA[state.selectedModel].name}.`, 'success');
+            const modelName = state.availableModels[state.selectedModel]?.name || state.selectedModel;
+            showStatus(`Model set to ${modelName}.`, 'success');
         } else {
             showStatus('Please select a model first.', 'error');
+        }
+    };
+
+    /**
+     * Fetches available Gemini models from the API and renders them.
+     */
+    const fetchAndRenderModels = async () => {
+        if (!state.apiKey) {
+            return;
+        }
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${state.apiKey}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!response.ok || !data.models) {
+                const error = data.error?.message || 'Failed to fetch Gemini models.';
+                throw new Error(error);
+            }
+
+            const models = {};
+            data.models.forEach((model) => {
+                if (!model.name) return;
+                const modelId = model.name.replace('models/', '');
+                if (!modelId.includes('gemini')) return;
+                models[modelId] = {
+                    name: model.displayName || modelId,
+                    desc: model.description || '',
+                    pricing: null,
+                };
+            });
+
+            state.availableModels = models;
+            if (!state.selectedModel || !state.availableModels[state.selectedModel]) {
+                const firstModel = Object.keys(state.availableModels)[0];
+                if (firstModel) {
+                    state.selectedModel = firstModel;
+                    setStorage('selectedGeminiModel', state.selectedModel);
+                }
+            }
+
+            renderModelSelection();
+        } catch (error) {
+            console.error('Gemini model fetch error:', error);
+            showStatus(`Model Fetch Error: ${error.message}`, 'error');
+            state.availableModels = {};
+            renderModelSelection();
         }
     };
 
