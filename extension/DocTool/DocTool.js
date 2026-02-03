@@ -120,19 +120,85 @@ function buildImagePath(fileName) {
     return `assets/img/${docState.imageFolder}/${fileName}`;
 }
 
+function escapeHtml(value) {
+    return (value || '').toString().replace(/[&<>"']/g, (char) => {
+        switch (char) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#39;';
+            default: return char;
+        }
+    });
+}
+
+function parseCategories(value) {
+    if (!value) return [];
+    let trimmed = value.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        trimmed = trimmed.slice(1, -1);
+    }
+    if (!trimmed) return [];
+    return trimmed.split(',').map(item => item.trim()).filter(Boolean);
+}
+
+function parseFrontMatter(markdown) {
+    if (!markdown.startsWith('---')) {
+        return { body: markdown, meta: {} };
+    }
+
+    const match = markdown.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+    if (!match) {
+        return { body: markdown, meta: {} };
+    }
+
+    const meta = {};
+    const lines = match[1].split('\n');
+    lines.forEach((line) => {
+        if (!line.trim()) return;
+        const colonIndex = line.indexOf(':');
+        if (colonIndex === -1) return;
+        const key = line.slice(0, colonIndex).trim();
+        const value = line.slice(colonIndex + 1).trim();
+        if (key) {
+            meta[key] = value;
+        }
+    });
+
+    return {
+        body: markdown.slice(match[0].length),
+        meta,
+    };
+}
+
 function updateDocPreview() {
-    let markdown = docDom.docEditor.value;
-    markdown = markdown.replace(/\{%\s*include\s+figure\.liquid\s+path='([^']+)'\s+class="([^"]+)"\s*%\}/g, (match, path, className) => {
+    const { body, meta } = parseFrontMatter(docDom.docEditor.value);
+    let markdown = body.replace(/\{%\s*include\s+figure\.liquid\s+path='([^']+)'\s+class="([^"]+)"\s*%\}/g, (match, path, className) => {
         const image = docState.images.find((entry) => entry.path === path);
         if (!image) return match;
         return `<img src="${image.dataUrl}" class="${className}" />`;
     });
 
-    if (typeof marked === 'object') {
-        docDom.docPreview.innerHTML = marked.parse(markdown);
-    } else {
-        docDom.docPreview.textContent = markdown;
+    const headerParts = [];
+    if (meta.title) {
+        headerParts.push(`<h1 class="doc-preview-title">${escapeHtml(meta.title)}</h1>`);
     }
+    if (meta.description) {
+        headerParts.push(`<p class="doc-preview-description">${escapeHtml(meta.description)}</p>`);
+    }
+    const categories = parseCategories(meta.categories);
+    if (categories.length) {
+        const items = categories.map((category) => `<span class="doc-preview-category">${escapeHtml(category)}</span>`).join('');
+        headerParts.push(`<div class="doc-preview-categories">${items}</div>`);
+    }
+    const headerHtml = headerParts.length ? `<div class="doc-preview-header">${headerParts.join('')}</div>` : '';
+
+    const bodyHtml = typeof marked === 'object'
+        ? marked.parse(markdown)
+        : `<pre>${escapeHtml(markdown)}</pre>`;
+
+    docDom.docPreview.innerHTML = `${headerHtml}${bodyHtml}`;
 
     if (typeof renderMathInElement === 'function') {
         renderMathInElement(docDom.docPreview, {
