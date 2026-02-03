@@ -5,6 +5,10 @@
 
 const dom = {};
 let storageKey = null;
+let imagesKey = null;
+let docImages = [];
+let docMetaKey = null;
+let docMeta = {};
 
 function cacheDomElements() {
     dom.docCloseBtn = document.getElementById('doc-close-btn');
@@ -33,7 +37,12 @@ async function applyTheme() {
 }
 
 function updatePreview() {
-    const markdown = dom.docEditor.value;
+    let markdown = dom.docEditor.value;
+    markdown = markdown.replace(/\{%\s*include\s+figure\.liquid\s+path='([^']+)'\s+class="([^"]+)"\s*%\}/g, (match, path, className) => {
+        const image = docImages.find((entry) => entry.path === path);
+        if (!image) return match;
+        return `<img src="${image.dataUrl}" class="${className}" />`;
+    });
     if (typeof marked === 'object') {
         dom.docPreview.innerHTML = marked.parse(markdown);
     } else {
@@ -83,9 +92,25 @@ async function initializePopoutDoc() {
     const urlParams = new URLSearchParams(window.location.search);
     const pdfUrl = decodeURIComponent(urlParams.get('pdf') || '');
     storageKey = `docDraft_${pdfUrl || 'unknown'}`;
+    imagesKey = `docImages_${pdfUrl || 'unknown'}`;
+    docMetaKey = `docMeta_${pdfUrl || 'unknown'}`;
 
     const savedDraft = await getStorage(storageKey);
-    dom.docEditor.value = savedDraft || `---\ntitle: \ndescription: \ncategories: []\nlink: ${pdfUrl}\n---\n\n`;
+    const savedImages = await getStorage(imagesKey);
+    if (Array.isArray(savedImages)) {
+        docImages = savedImages;
+    }
+    const savedMeta = await getStorage(docMetaKey);
+    if (savedMeta && typeof savedMeta === 'object') {
+        docMeta = savedMeta;
+    }
+
+    if (savedDraft) {
+        dom.docEditor.value = savedDraft;
+    } else {
+        const title = docMeta.title || '';
+        dom.docEditor.value = `---\ntitle: ${title}\ndescription: \ncategories: []\nlink: ${pdfUrl}\n---\n\n`;
+    }
 
     updatePreview();
 

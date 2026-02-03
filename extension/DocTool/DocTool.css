@@ -128,6 +128,11 @@
     background-color: rgba(255, 255, 255, 0.08);
 }
 
+.doc-controls button.active {
+    background-color: rgba(26, 115, 232, 0.2);
+    color: var(--doc-primary-action);
+}
+
 #doc-tabs {
     display: flex;
     align-items: center;
@@ -259,6 +264,20 @@ body.doc-popout #doc-panel {
 
 body.doc-popout #doc-panel .resizer {
     display: none;
+}
+
+.doc-capture-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    cursor: crosshair;
+}
+
+.doc-capture-rect {
+    position: absolute;
+    border: 2px dashed var(--doc-primary-action);
+    background-color: rgba(26, 115, 232, 0.1);
+    pointer-events: none;
 }
 
 /* Resizer styles (shared with in-page tool) */
