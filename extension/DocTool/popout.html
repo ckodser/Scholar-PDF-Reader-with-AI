@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Documentation</title>
+  <link rel="stylesheet" href="/DocTool/DocTool.css">
+  <script src="/marked.min.js"></script>
+  <script defer src="/katex.min.js"></script>
+  <script defer src="/auto-render.min.js"></script>
+  <script src="/DocTool/popout.js" defer></script>
+</head>
+<body class="doc-popout">
+  <div id="doc-panel">
+    <div class="doc-header">
+      <h3>
+        <span class="material-symbols-outlined">description</span>
+        <span id="doc-header-title">Documentation</span>
+      </h3>
+      <div class="doc-controls">
+        <button id="doc-close-btn" title="Close Doc">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="doc-tabs">
+      <button class="doc-tab active" data-tab="markdown">Markdown</button>
+      <button class="doc-tab" data-tab="preview">Preview</button>
+    </div>
+
+    <div id="doc-editor-pane">
+      <textarea id="doc-editor" spellcheck="true"></textarea>
+    </div>
+    <div id="doc-preview-pane" class="hidden">
+      <div id="doc-preview" class="doc-preview-content"></div>
+    </div>
+  </div>
+</body>
+</html>

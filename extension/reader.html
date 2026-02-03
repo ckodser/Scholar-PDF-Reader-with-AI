@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/tts/tts.css">
   <link rel="stylesheet" href="/annotation/annotation.css">
   <link rel="stylesheet" href="/AiChat/AiChat.css">
+  <link rel="stylesheet" href="/DocTool/DocTool.css">
 
   <script src="marked.min.js"></script>
 
@@ -15,6 +16,7 @@
   <script src="/tts/tts.js" defer></script>
     <script src="/AiChat/AiChat.common.js" defer></script>
   <script src="/AiChat/AiChat.js" defer></script>
+  <script src="/DocTool/DocTool.js" defer></script>
   <script src="pdf.min.js" defer></script>
   <script src="pdf.worker.min.js" defer></script>
 
@@ -98,6 +100,48 @@
     </div>
   </div>
 
+  <!-- Document Tool Panel Structure - Starts hidden -->
+  <div id="doc-panel" class="hidden">
+    <div class="resizer resizer-n"></div>
+    <div class="resizer resizer-s"></div>
+    <div class="resizer resizer-w"></div>
+    <div class="resizer resizer-e"></div>
+    <div class="resizer resizer-nw"></div>
+    <div class="resizer resizer-ne"></div>
+    <div class="resizer resizer-sw"></div>
+    <div class="resizer resizer-se"></div>
+
+    <div class="doc-header">
+      <h3>
+        <span class="material-symbols-outlined">description</span>
+        <span id="doc-header-title">Documentation</span>
+      </h3>
+      <div class="doc-controls">
+        <button id="doc-popout-btn" title="Pop-out Doc" class="hidden">
+          <span class="material-symbols-outlined">open_in_new</span>
+        </button>
+        <button id="doc-resize-btn" title="Toggle Size">
+          <span class="material-symbols-outlined">open_in_full</span>
+        </button>
+        <button id="doc-close-btn" title="Close Doc">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="doc-tabs">
+      <button class="doc-tab active" data-tab="markdown">Markdown</button>
+      <button class="doc-tab" data-tab="preview">Preview</button>
+    </div>
+
+    <div id="doc-editor-pane">
+      <textarea id="doc-editor" spellcheck="true"></textarea>
+    </div>
+    <div id="doc-preview-pane" class="hidden">
+      <div id="doc-preview" class="doc-preview-content"></div>
+    </div>
+  </div>
+
 
   <div id="annotation-toolbar">
     <button id="highlight-btn" class="toolbar-button hidden" data-tooltip="Highlight">
@@ -138,6 +182,12 @@
 
     <button id="chat-activate-btn" class="toolbar-button hidden" data-tooltip="Chat with AI">
         <span class="material-symbols-outlined" style="font-size: 30px;">network_intelligence</span>
+    </button>
+
+    <div id="doc-tool-border" style="width: 1px; background-color: #555; margin: 5px;" class="hidden"></div>
+
+    <button id="doc-activate-btn" class="toolbar-button hidden" data-tooltip="Documentation">
+        <span class="material-symbols-outlined" style="font-size: 26px;">description</span>
     </button>
   </div>
 </body>
