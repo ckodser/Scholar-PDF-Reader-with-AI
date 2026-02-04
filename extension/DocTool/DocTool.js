@@ -62,7 +62,8 @@ async function docGetPdfUrlWithRetry(retries = 10, delay = 500) {
 }
 
 function getDefaultTemplate(pdfUrl, pdfTitle) {
-    return `---\ntitle: ${pdfTitle || ''}\ndescription: \ncategories: []\nlink: ${pdfUrl || ''}\n---\n\n`;
+    const sanitizedTitle = (pdfTitle || '').toString().replace(/:/g, '').trim();
+    return `---\ntitle: ${sanitizedTitle}\ndescription: \ncategories: []\nlink: ${pdfUrl || ''}\n---\n\n`;
 }
 
 function getPdfSlug(pdfUrl) {
@@ -79,7 +80,13 @@ function getPdfSlug(pdfUrl) {
 }
 
 function normalizeSlug(value) {
-    return (value || 'pdf').toString().trim().replace(/[^a-zA-Z0-9-_]+/g, '_').replace(/^_+|_+$/g, '') || 'pdf';
+    const slug = (value || 'pdf')
+        .toString()
+        .trim()
+        .replace(/[^a-zA-Z0-9-_]+/g, '_')
+        .replace(/-+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    return slug || 'pdf';
 }
 
 function stripUrlScheme(value) {
@@ -609,7 +616,7 @@ function downloadImagesZip() {
     const url = URL.createObjectURL(zipBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${docState.titleSlug || docState.imageFolder}-images.zip`;
+    link.download = `${docState.titleSlug || docState.imageFolder}.zip`;
     document.body.appendChild(link);
     link.click();
     link.remove();
