@@ -3,6 +3,34 @@
  * Manages the UI interactions for the in-page AI chat panel.
  */
 
+function ensureGsrFloatingPanelManager() {
+    if (window.gsrFloatingPanels && typeof window.gsrFloatingPanels.bringToFront === 'function') {
+        return window.gsrFloatingPanels;
+    }
+
+    const state = {
+        // Keep panels below doc capture overlay (2500+) and other global overlays.
+        baseZ: 2300,
+        topZ: 2400,
+        panelIds: ['ai-chat-panel', 'doc-panel'],
+    };
+
+    window.gsrFloatingPanels = {
+        bringToFront(panelEl) {
+            if (!panelEl || !panelEl.style) return;
+            const panels = state.panelIds
+                .map((id) => document.getElementById(id))
+                .filter(Boolean);
+
+            panels.forEach((el) => {
+                el.style.zIndex = (el === panelEl ? state.topZ : state.baseZ).toString();
+            });
+        },
+    };
+
+    return window.gsrFloatingPanels;
+}
+
 // --- Window Functionality (Draggable, Resizable) ---
 // ... (makeDraggable and makeResizable functions remain unchanged) ...
 function makeDraggable(panel, header) {
@@ -157,6 +185,9 @@ function makeResizable(panel) {
 async function toggleChatPanel() {
     aiChatState.isPanelOpen = !aiChatState.isPanelOpen;
     dom.chatPanel.classList.toggle('hidden', !aiChatState.isPanelOpen);
+    if (aiChatState.isPanelOpen) {
+        ensureGsrFloatingPanelManager().bringToFront(dom.chatPanel);
+    }
     if (aiChatState.isPanelOpen && aiChatState.tabs.length === 0) {
         await createNewTab();
     }
@@ -193,6 +224,15 @@ function toggleChatSize() {
 async function initializeAiChat() {
     console.log('Initializing AI Chat...');
     cacheDomElements();
+
+    if (dom.chatPanel) {
+        const floatingPanels = ensureGsrFloatingPanelManager();
+        dom.chatPanel.addEventListener(
+            'mousedown',
+            () => floatingPanels.bringToFront(dom.chatPanel),
+            { capture: true }
+        );
+    }
 
     makeDraggable(dom.chatPanel, dom.chatHeader);
     makeResizable(dom.chatPanel);

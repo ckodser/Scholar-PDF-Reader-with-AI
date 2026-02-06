@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Summary</title>
+    <link rel="stylesheet" href="doc_preview.css">
+    <link rel="stylesheet" href="katex.min.css">
+</head>
+<body>
+    <div class="page">
+        <header class="page-header">
+            <div>
+                <h1 id="doc-title">Document Summary</h1>
+                <p id="doc-description" class="subtitle"></p>
+            </div>
+        </header>
+
+        <section id="doc-hero" class="doc-hero hidden">
+            <div class="doc-hero-image">
+                <img id="doc-hero-img" alt="">
+            </div>
+            <div class="doc-hero-meta">
+                <div id="doc-categories" class="doc-categories"></div>
+                <div id="doc-source" class="doc-source"></div>
+            </div>
+        </section>
+
+        <main id="doc-content" class="doc-content"></main>
+        <div id="empty-state" class="empty-state hidden">
+            No documentation content available for this PDF.
+        </div>
+    </div>
+
+    <script src="marked.min.js"></script>
+    <script src="katex.min.js"></script>
+    <script src="auto-render.min.js"></script>
+    <script src="doc_preview.js"></script>
+</body>
+</html>

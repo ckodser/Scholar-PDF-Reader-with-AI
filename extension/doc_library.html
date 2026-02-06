@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Library</title>
+    <link rel="stylesheet" href="doc_library.css">
+</head>
+<body>
+    <div class="page">
+        <header class="page-header">
+            <h1>Document Library</h1>
+            <p>All documents saved by the Doc Tool in one place.</p>
+        </header>
+        <div class="search-bar">
+            <input id="search-input" type="search" placeholder="Search documentation..." aria-label="Search documentation">
+            <button id="search-clear-btn" class="secondary">Clear</button>
+            <span id="search-status" class="search-status"></span>
+        </div>
+        <div id="docs-grid" class="docs-grid"></div>
+        <div id="empty-state" class="empty-state hidden">
+            No documents saved yet. Open a PDF and use the Documentation tool to create one.
+        </div>
+    </div>
+    <script src="doc_library.js"></script>
+</body>
+</html>

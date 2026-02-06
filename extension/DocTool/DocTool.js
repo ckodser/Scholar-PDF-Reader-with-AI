@@ -13,9 +13,38 @@ let docState = {
     imageFolder: 'pdf',
     pdfTitle: '',
     titleSlug: 'pdf',
+    isSaved: true,
 };
 
 const docDom = {};
+
+function ensureGsrFloatingPanelManager() {
+    if (window.gsrFloatingPanels && typeof window.gsrFloatingPanels.bringToFront === 'function') {
+        return window.gsrFloatingPanels;
+    }
+
+    const state = {
+        // Keep panels below doc capture overlay (2500+) and other global overlays.
+        baseZ: 2300,
+        topZ: 2400,
+        panelIds: ['ai-chat-panel', 'doc-panel'],
+    };
+
+    window.gsrFloatingPanels = {
+        bringToFront(panelEl) {
+            if (!panelEl || !panelEl.style) return;
+            const panels = state.panelIds
+                .map((id) => document.getElementById(id))
+                .filter(Boolean);
+
+            panels.forEach((el) => {
+                el.style.zIndex = (el === panelEl ? state.topZ : state.baseZ).toString();
+            });
+        },
+    };
+
+    return window.gsrFloatingPanels;
+}
 
 function cacheDocDomElements() {
     docDom.docActivateBtn = document.getElementById('doc-activate-btn');
@@ -27,6 +56,7 @@ function cacheDocDomElements() {
     docDom.docPopoutBtn = document.getElementById('doc-popout-btn');
     docDom.docCaptureBtn = document.getElementById('doc-capture-btn');
     docDom.docDownloadImagesBtn = document.getElementById('doc-download-images-btn');
+    docDom.docSaveIndicator = document.getElementById('doc-save-indicator');
     docDom.docTabs = Array.from(document.querySelectorAll('#doc-tabs .doc-tab'));
     docDom.docEditor = document.getElementById('doc-editor');
     docDom.docEditorPane = document.getElementById('doc-editor-pane');
@@ -63,7 +93,7 @@ async function docGetPdfUrlWithRetry(retries = 10, delay = 500) {
 
 function getDefaultTemplate(pdfUrl, pdfTitle) {
     const sanitizedTitle = (pdfTitle || '').toString().replace(/:/g, '').trim();
-    return `---\ntitle: ${sanitizedTitle}\ndescription: \ncategories: []\nlink: ${pdfUrl || ''}\n---\n\n`;
+    return `---\nlayout: page\ntitle: ${sanitizedTitle}\ndescription: \ncategories: []\nimg: \nimportance: 1 \ngiscus_comments: true\nlink: ${pdfUrl || ''}\n---\n\n`;
 }
 
 function getPdfSlug(pdfUrl) {
@@ -219,13 +249,29 @@ function updateDocPreview() {
     }
 }
 
+function setDocSaveState(isSaved) {
+    docState.isSaved = isSaved;
+    if (!docDom.docSaveIndicator) return;
+    docDom.docSaveIndicator.classList.toggle('is-saved', isSaved);
+    docDom.docSaveIndicator.classList.toggle('is-dirty', !isSaved);
+    docDom.docSaveIndicator.title = isSaved ? 'All changes saved' : 'Unsaved changes — click to save';
+}
+
+async function saveDocDraft() {
+    if (!docState.storageKey) return;
+    await docSetStorage({ [docState.storageKey]: docDom.docEditor.value });
+    setDocSaveState(true);
+}
+
 function setActiveDocTab(tabName) {
     docDom.docTabs.forEach(tab => {
         tab.classList.toggle('active', tab.dataset.tab === tabName);
     });
 
-    const showPreview = tabName === 'preview';
-    docDom.docEditorPane.classList.toggle('hidden', showPreview);
+    const showPreview = tabName === 'preview' || tabName === 'split';
+    const showEditor = tabName === 'markdown' || tabName === 'split';
+    docDom.docPanel.classList.toggle('split-view', tabName === 'split');
+    docDom.docEditorPane.classList.toggle('hidden', !showEditor);
     docDom.docPreviewPane.classList.toggle('hidden', !showPreview);
 
     if (showPreview) {
@@ -238,7 +284,9 @@ function scheduleDocSaveDraft() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
         if (docState.storageKey) {
-            docSetStorage({ [docState.storageKey]: docDom.docEditor.value });
+            docSetStorage({ [docState.storageKey]: docDom.docEditor.value }).then(() => {
+                setDocSaveState(true);
+            });
         }
     }, 300);
 }
@@ -246,6 +294,9 @@ function scheduleDocSaveDraft() {
 function toggleDocPanel() {
     docState.isPanelOpen = !docState.isPanelOpen;
     docDom.docPanel.classList.toggle('hidden', !docState.isPanelOpen);
+    if (docState.isPanelOpen) {
+        ensureGsrFloatingPanelManager().bringToFront(docDom.docPanel);
+    }
     if (!docState.isPanelOpen) {
         setActiveDocTab('markdown');
     }
@@ -279,6 +330,7 @@ function toggleDocSize() {
 }
 
 function handleDocEditorInput() {
+    setDocSaveState(false);
     scheduleDocSaveDraft();
     if (!docDom.docPreviewPane.classList.contains('hidden')) {
         updateDocPreview();
@@ -762,6 +814,15 @@ function startCaptureMode() {
 async function initializeDocTool() {
     cacheDocDomElements();
 
+    if (docDom.docPanel) {
+        const floatingPanels = ensureGsrFloatingPanelManager();
+        docDom.docPanel.addEventListener(
+            'mousedown',
+            () => floatingPanels.bringToFront(docDom.docPanel),
+            { capture: true }
+        );
+    }
+
     docMakeDraggable(docDom.docPanel, docDom.docHeader);
     docMakeResizable(docDom.docPanel);
 
@@ -804,6 +865,7 @@ async function initializeDocTool() {
     } else {
         docDom.docEditor.value = savedDraft;
     }
+    setDocSaveState(!!savedDraft);
 
     updateDocPreview();
 
@@ -816,6 +878,9 @@ async function initializeDocTool() {
     docDom.docPopoutBtn.addEventListener('click', openDocPopout);
     docDom.docCaptureBtn.addEventListener('click', startCaptureMode);
     docDom.docDownloadImagesBtn.addEventListener('click', downloadImagesZip);
+    if (docDom.docSaveIndicator) {
+        docDom.docSaveIndicator.addEventListener('click', saveDocDraft);
+    }
 
     docDom.docTabs.forEach(tab => {
         tab.addEventListener('click', () => setActiveDocTab(tab.dataset.tab));

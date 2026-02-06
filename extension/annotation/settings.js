@@ -19,6 +19,7 @@ function showError(message) {
 
 document.addEventListener('DOMContentLoaded', () => {
     const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const openDocLibraryBtn = document.getElementById('open-doc-library-btn');
 
     // Load saved theme preference and set the checkbox state
     chrome.storage.local.get('theme', (data) => {
@@ -32,6 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
         darkModeToggle.addEventListener('change', (event) => {
             const newTheme = event.target.checked ? 'dark' : 'light';
             chrome.storage.local.set({ theme: newTheme });
+        });
+    }
+
+    if (openDocLibraryBtn) {
+        openDocLibraryBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: chrome.runtime.getURL('doc_library.html') });
         });
     }
 });

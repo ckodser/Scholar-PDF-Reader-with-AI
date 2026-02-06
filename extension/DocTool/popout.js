@@ -9,6 +9,7 @@ let imagesKey = null;
 let docImages = [];
 let docMetaKey = null;
 let docMeta = {};
+let isSaved = true;
 
 function cacheDomElements() {
     dom.docCloseBtn = document.getElementById('doc-close-btn');
@@ -18,6 +19,7 @@ function cacheDomElements() {
     dom.docPreviewPane = document.getElementById('doc-preview-pane');
     dom.docPreview = document.getElementById('doc-preview');
     dom.docPanel = document.getElementById('doc-panel');
+    dom.docSaveIndicator = document.getElementById('doc-save-indicator');
 }
 
 function getStorage(key) {
@@ -61,13 +63,29 @@ function updatePreview() {
     }
 }
 
+function setSaveState(saved) {
+    isSaved = saved;
+    if (!dom.docSaveIndicator) return;
+    dom.docSaveIndicator.classList.toggle('is-saved', saved);
+    dom.docSaveIndicator.classList.toggle('is-dirty', !saved);
+    dom.docSaveIndicator.title = saved ? 'All changes saved' : 'Unsaved changes — click to save';
+}
+
+async function saveDraft() {
+    if (!storageKey) return;
+    await setStorage({ [storageKey]: dom.docEditor.value });
+    setSaveState(true);
+}
+
 function setActiveTab(tabName) {
     dom.docTabs.forEach(tab => {
         tab.classList.toggle('active', tab.dataset.tab === tabName);
     });
 
-    const showPreview = tabName === 'preview';
-    dom.docEditorPane.classList.toggle('hidden', showPreview);
+    const showPreview = tabName === 'preview' || tabName === 'split';
+    const showEditor = tabName === 'markdown' || tabName === 'split';
+    dom.docPanel.classList.toggle('split-view', tabName === 'split');
+    dom.docEditorPane.classList.toggle('hidden', !showEditor);
     dom.docPreviewPane.classList.toggle('hidden', !showPreview);
 
     if (showPreview) {
@@ -80,7 +98,9 @@ function scheduleSaveDraft() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
         if (storageKey) {
-            setStorage({ [storageKey]: dom.docEditor.value });
+            setStorage({ [storageKey]: dom.docEditor.value }).then(() => {
+                setSaveState(true);
+            });
         }
     }, 300);
 }
@@ -111,6 +131,7 @@ async function initializePopoutDoc() {
         const title = docMeta.title || '';
         dom.docEditor.value = `---\ntitle: ${title}\ndescription: \ncategories: []\nlink: ${pdfUrl}\n---\n\n`;
     }
+    setSaveState(!!savedDraft);
 
     updatePreview();
 
@@ -119,12 +140,16 @@ async function initializePopoutDoc() {
     });
 
     dom.docEditor.addEventListener('input', () => {
+        setSaveState(false);
         scheduleSaveDraft();
         if (!dom.docPreviewPane.classList.contains('hidden')) {
             updatePreview();
         }
     });
 
+    if (dom.docSaveIndicator) {
+        dom.docSaveIndicator.addEventListener('click', saveDraft);
+    }
     dom.docCloseBtn.addEventListener('click', () => window.close());
 }
 

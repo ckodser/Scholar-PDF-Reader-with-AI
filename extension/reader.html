@@ -116,6 +116,7 @@
         <span class="material-symbols-outlined">description</span>
         <span id="doc-header-title">Documentation</span>
       </h3>
+      <button id="doc-save-indicator" class="doc-save-indicator is-saved" title="All changes saved" aria-label="Save status"></button>
       <div class="doc-controls">
         <button id="doc-capture-btn" title="Capture Image">
           <span class="material-symbols-outlined">crop_free</span>
@@ -138,13 +139,16 @@
     <div id="doc-tabs">
       <button class="doc-tab active" data-tab="markdown">Markdown</button>
       <button class="doc-tab" data-tab="preview">Preview</button>
+      <button class="doc-tab" data-tab="split">Split</button>
     </div>
 
-    <div id="doc-editor-pane">
-      <textarea id="doc-editor" spellcheck="true"></textarea>
-    </div>
-    <div id="doc-preview-pane" class="hidden">
-      <div id="doc-preview" class="doc-preview-content"></div>
+    <div id="doc-body">
+      <div id="doc-editor-pane">
+        <textarea id="doc-editor" spellcheck="true"></textarea>
+      </div>
+      <div id="doc-preview-pane" class="hidden">
+        <div id="doc-preview" class="doc-preview-content"></div>
+      </div>
     </div>
   </div>
 
