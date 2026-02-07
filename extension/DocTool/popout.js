@@ -61,6 +61,48 @@ function parseFrontMatter(markdown) {
     };
 }
 
+function escapeHtml(value) {
+    return (value || '').toString().replace(/[&<>"']/g, (char) => {
+        switch (char) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#39;';
+            default: return char;
+        }
+    });
+}
+
+function parseCategories(value) {
+    if (!value) return [];
+    let trimmed = value.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        trimmed = trimmed.slice(1, -1);
+    }
+    if (!trimmed) return [];
+    return trimmed.split(',').map(item => item.trim()).filter(Boolean);
+}
+
+function protectMathBlocks(markdown) {
+    const mathSegments = [];
+    const pattern = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$(?:\\\$|[^$\n])+\$)/g;
+    const protectedMarkdown = markdown.replace(pattern, (match) => {
+        const token = `%%DOC_MATH_${mathSegments.length}%%`;
+        mathSegments.push(match);
+        return token;
+    });
+    return { protectedMarkdown, mathSegments };
+}
+
+function restoreMathBlocks(html, mathSegments) {
+    if (!mathSegments.length) return html;
+    return html.replace(/%%DOC_MATH_(\d+)%%/g, (match, index) => {
+        const tokenIndex = Number(index);
+        return Number.isNaN(tokenIndex) ? match : (mathSegments[tokenIndex] || match);
+    });
+}
+
 function buildFrontMatterTemplate(meta, defaults) {
     const orderedKeys = [
         'layout',
@@ -243,17 +285,33 @@ async function applyTheme() {
 }
 
 function updatePreview() {
-    let markdown = dom.docEditor.value;
-    markdown = markdown.replace(/\{%\s*include\s+figure\.liquid\s+path='([^']+)'\s+class="([^"]+)"\s*%\}/g, (match, path, className) => {
+    const { body, meta } = parseFrontMatter(dom.docEditor.value);
+    let markdown = body.replace(/\{%\s*include\s+figure\.liquid\s+path='([^']+)'\s+class="([^"]+)"\s*%\}/g, (match, path, className) => {
         const image = docImages.find((entry) => entry.path === path);
         if (!image) return match;
         return `<img src="${image.dataUrl}" class="${className}" />`;
     });
-    if (typeof marked === 'object') {
-        dom.docPreview.innerHTML = marked.parse(markdown);
-    } else {
-        dom.docPreview.textContent = markdown;
+    const { protectedMarkdown, mathSegments } = protectMathBlocks(markdown);
+    const headerParts = [];
+    if (meta.title) {
+        headerParts.push(`<h1 class="doc-preview-title">${escapeHtml(meta.title)}</h1>`);
     }
+    if (meta.description) {
+        headerParts.push(`<p class="doc-preview-description">${escapeHtml(meta.description)}</p>`);
+    }
+    const categories = parseCategories(meta.categories);
+    if (categories.length) {
+        const items = categories.map((category) => `<span class="doc-preview-category">${escapeHtml(category)}</span>`).join('');
+        headerParts.push(`<div class="doc-preview-categories">${items}</div>`);
+    }
+    const headerHtml = headerParts.length ? `<div class="doc-preview-header">${headerParts.join('')}</div>` : '';
+
+    const bodyHtml = typeof marked === 'object'
+        ? marked.parse(protectedMarkdown)
+        : `<pre>${escapeHtml(markdown)}</pre>`;
+    const restoredBodyHtml = restoreMathBlocks(bodyHtml, mathSegments);
+
+    dom.docPreview.innerHTML = `${headerHtml}${restoredBodyHtml}`;
 
     if (typeof renderMathInElement === 'function') {
         renderMathInElement(dom.docPreview, {
