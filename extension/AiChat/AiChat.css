@@ -161,6 +161,10 @@
     border-top-right-radius: 4px; max-width: 90%;
 }
 
+.chat-message.ai .message-content.copied {
+    box-shadow: 0 0 0 2px var(--primary-action) inset;
+}
+
 .thinking-indicator .message-content {
     font-style: italic; color: var(--text-secondary);
     animation: blink-ellipsis 1.5s infinite;

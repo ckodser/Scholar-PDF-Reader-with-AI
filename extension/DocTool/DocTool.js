@@ -54,6 +54,7 @@ function cacheDocDomElements() {
     docDom.docCloseBtn = document.getElementById('doc-close-btn');
     docDom.docResizeBtn = document.getElementById('doc-resize-btn');
     docDom.docPopoutBtn = document.getElementById('doc-popout-btn');
+    docDom.docAutoSummaryBtn = document.getElementById('doc-auto-summary-btn');
     docDom.docCaptureBtn = document.getElementById('doc-capture-btn');
     docDom.docDownloadImagesBtn = document.getElementById('doc-download-images-btn');
     docDom.docSaveIndicator = document.getElementById('doc-save-indicator');
@@ -207,6 +208,174 @@ function parseFrontMatter(markdown) {
         body: markdown.slice(match[0].length),
         meta,
     };
+}
+
+function buildFrontMatterTemplate(meta, defaults) {
+    const orderedKeys = [
+        'layout',
+        'title',
+        'description',
+        'categories',
+        'img',
+        'importance',
+        'giscus_comments',
+        'link'
+    ];
+    const lines = [];
+    const usedKeys = new Set();
+    orderedKeys.forEach((key) => {
+        let value = meta && meta[key] !== undefined ? meta[key] : defaults[key];
+        if (key === 'description' || key === 'img') {
+            value = '';
+        }
+        if (value === undefined || value === null) {
+            value = '';
+        }
+        lines.push(`${key}: ${value}`);
+        usedKeys.add(key);
+    });
+
+    Object.keys(meta || {}).forEach((key) => {
+        if (usedKeys.has(key)) return;
+        const value = meta[key];
+        if (value === undefined || value === null) return;
+        lines.push(`${key}: ${value}`);
+    });
+
+    return `---\n${lines.join('\n')}\n---\n`;
+}
+
+async function getDocGeminiConfig() {
+    const apiKey = await docGetStorage('geminiApiKey');
+    const savedModel = await docGetStorage('selectedGeminiModel');
+    const fallbackModel = window.aiChatState && window.aiChatState.model
+        ? window.aiChatState.model
+        : 'gemini-flash-latest';
+    return {
+        apiKey,
+        model: savedModel || fallbackModel,
+    };
+}
+
+async function fetchPdfAsBase64(pdfUrl) {
+    if (!pdfUrl) {
+        throw new Error('Missing PDF URL.');
+    }
+    const response = await fetch(pdfUrl);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    bytes.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+    });
+    return window.btoa(binary);
+}
+
+function buildDocSummaryPrompt(frontMatter, imageFolder, pdfTitle) {
+    const safeTitle = (pdfTitle || '').trim();
+    return [
+        'You are writing documentation for a research paper.',
+        safeTitle ? `Paper title: ${safeTitle}` : '',
+        '',
+        'Return only Markdown. Use the front matter template below and fill in the description and img fields.',
+        '```',
+        frontMatter.trim(),
+        '```',
+        '',
+        'Requirements:',
+        '- Focus only on Method and Experiments. Omit related work entirely.',
+        '- Be objective and concrete. Avoid hype, subjective adjectives/adverbs, and claims like novel, groundbreaking, or state-of-the-art.',
+        '- Avoid vague, high-level phrasing and avoid jargon where possible.',
+        '- Use Markdown headings: "Method" and "Experiments".',
+        '- Put all math in $...$ (single dollar), even display equations. For maths you want to put in their own line and separate them with a blank line and use double dollar signs for display equations.',
+        '- Add placeholders for figures/tables you want included, e.g., [FIGURE: Figure 2 - short caption] and [TABLE: Table 1 - short caption].',
+        `- Choose one representative figure for the title image; set img to [FIGURE: Figure <N> - ...] placeholder.`,
+        '- Provide a short description sentence for the front matter description.',
+        '- The reader is an expert in the field, so you can assume they are familiar with the concepts and can understand the maths.',
+        '',
+        'Output only the filled front matter followed by the Markdown body.'
+    ]
+        .filter(Boolean)
+        .join('\n');
+}
+
+async function callGeminiForDoc(prompt, pdfDataB64, model, apiKey) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const payload = {
+        contents: [
+            {
+                role: 'user',
+                parts: [
+                    { text: prompt },
+                    { inlineData: { mimeType: 'application/pdf', data: pdfDataB64 } }
+                ]
+            }
+        ]
+    };
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.candidates) {
+        throw new Error(data.error?.message || 'Unknown API error.');
+    }
+    return data;
+}
+
+function setDocAutoSummaryLoading(isLoading) {
+    if (!docDom.docAutoSummaryBtn) return;
+    const icon = docDom.docAutoSummaryBtn.querySelector('.material-symbols-outlined');
+    if (isLoading) {
+        docDom.docAutoSummaryBtn.classList.add('is-loading');
+        docDom.docAutoSummaryBtn.disabled = true;
+        if (icon) icon.textContent = 'hourglass_top';
+    } else {
+        docDom.docAutoSummaryBtn.classList.remove('is-loading');
+        docDom.docAutoSummaryBtn.disabled = false;
+        if (icon) icon.textContent = 'summarize';
+    }
+}
+
+async function handleDocAutoSummary() {
+    setDocAutoSummaryLoading(true);
+    try {
+        const { apiKey, model } = await getDocGeminiConfig();
+        if (!apiKey) {
+            throw new Error('Missing Gemini API key. Please add it in settings.');
+        }
+        const pdfUrl = docState.pdfUrl || await docGetPdfUrlWithRetry();
+        const pdfDataB64 = await fetchPdfAsBase64(pdfUrl);
+        const { meta } = parseFrontMatter(docDom.docEditor.value);
+        const frontMatter = buildFrontMatterTemplate(meta, {
+            layout: 'page',
+            title: meta.title || docState.pdfTitle || '',
+            description: '',
+            categories: meta.categories || '[]',
+            img: '',
+            importance: meta.importance || '1',
+            giscus_comments: meta.giscus_comments || 'true',
+            link: meta.link || pdfUrl || '',
+        });
+        const prompt = buildDocSummaryPrompt(frontMatter, docState.imageFolder || 'pdf', docState.pdfTitle);
+        const responseData = await callGeminiForDoc(prompt, pdfDataB64, model, apiKey);
+        const responseText = responseData.candidates[0].content.parts[0].text || '';
+        docDom.docEditor.value = responseText.trim();
+        setDocSaveState(false);
+        scheduleDocSaveDraft();
+        if (!docDom.docPreviewPane.classList.contains('hidden')) {
+            updateDocPreview();
+        }
+    } catch (error) {
+        console.error('Auto-generate summary failed:', error);
+        window.alert(`Auto-generate summary failed: ${error.message}`);
+    } finally {
+        setDocAutoSummaryLoading(false);
+    }
 }
 
 function updateDocPreview() {
@@ -827,6 +996,10 @@ async function initializeDocTool() {
     docMakeResizable(docDom.docPanel);
 
     await docApplyTheme();
+    const docGeminiKey = await docGetStorage('geminiApiKey');
+    if (docDom.docAutoSummaryBtn) {
+        docDom.docAutoSummaryBtn.classList.toggle('hidden', !docGeminiKey);
+    }
 
     docState.pdfUrl = await docGetPdfUrlWithRetry();
     docState.storageKey = `docDraft_${docState.pdfUrl || 'unknown'}`;
@@ -876,6 +1049,9 @@ async function initializeDocTool() {
     docDom.docCloseBtn.addEventListener('click', toggleDocPanel);
     docDom.docResizeBtn.addEventListener('click', toggleDocSize);
     docDom.docPopoutBtn.addEventListener('click', openDocPopout);
+    if (docDom.docAutoSummaryBtn) {
+        docDom.docAutoSummaryBtn.addEventListener('click', handleDocAutoSummary);
+    }
     docDom.docCaptureBtn.addEventListener('click', startCaptureMode);
     docDom.docDownloadImagesBtn.addEventListener('click', downloadImagesZip);
     if (docDom.docSaveIndicator) {

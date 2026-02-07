@@ -159,6 +159,20 @@
     color: var(--doc-primary-action);
 }
 
+.doc-controls button.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.doc-controls button.is-loading .material-symbols-outlined {
+    animation: doc-spinner 1s linear infinite;
+}
+
+@keyframes doc-spinner {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 #doc-tabs {
     display: flex;
     align-items: center;

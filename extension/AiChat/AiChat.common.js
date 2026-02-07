@@ -168,6 +168,13 @@ function renderMessage(sender, text) {
     }
 
     messageWrapper.appendChild(messageContent);
+
+    if (sender === 'ai') {
+        messageContent.title = 'Double-click to copy';
+        messageContent.addEventListener('dblclick', () => {
+            copyTextToClipboard(text, messageContent);
+        });
+    }
     dom.chatMessages.appendChild(messageWrapper);
 
     // Render math expressions in the new message
@@ -187,6 +194,13 @@ function renderMessage(sender, text) {
 // This function remains the same as the last version
 function autoResizeTextarea(textarea) {
     const maxHeight = 7 * 20; // 7 lines * 20px line-height (defined in AiChat.css)
+    const minHeight = parseInt(getComputedStyle(textarea).minHeight, 10) || 40;
+
+    if (!textarea.value.trim()) {
+        textarea.style.height = `${minHeight}px`;
+        textarea.style.overflowY = 'hidden';
+        return;
+    }
 
     // Reset height to auto to let the browser calculate the natural scrollHeight
     textarea.style.height = 'auto';
@@ -199,6 +213,32 @@ function autoResizeTextarea(textarea) {
     } else {
         textarea.style.height = `${scrollHeight}px`;
         textarea.style.overflowY = 'hidden'; // Hide scrollbar when not needed
+    }
+}
+
+async function copyTextToClipboard(text, element) {
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch (error) {
+        const fallback = document.createElement('textarea');
+        fallback.value = text;
+        fallback.setAttribute('readonly', '');
+        fallback.style.position = 'absolute';
+        fallback.style.left = '-9999px';
+        document.body.appendChild(fallback);
+        fallback.select();
+        document.execCommand('copy');
+        fallback.remove();
+    }
+
+    if (element) {
+        element.classList.add('copied');
+        const originalTitle = element.title;
+        element.title = 'Copied!';
+        window.setTimeout(() => {
+            element.classList.remove('copied');
+            element.title = originalTitle;
+        }, 1200);
     }
 }
 
@@ -325,6 +365,7 @@ async function handleSendMessage() {
 
         activeTab.conversation.push({role: 'user', parts: userMessageParts});
         dom.chatInput.value = '';
+        autoResizeTextarea(dom.chatInput);
         dom.chatSendBtn.disabled = true;
         activeTab.isThinking = true;
         await saveConversations();
