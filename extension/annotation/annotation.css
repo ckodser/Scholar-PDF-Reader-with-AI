@@ -25,7 +25,7 @@
     background-color: #333;
     border-radius: 25px;
     padding: 5px;
-    z-index: 1000;
+    z-index: 2450;
     display: flex;
     gap: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -90,7 +90,7 @@
     background-color: #444;
     border-radius: 10px;
     padding: 10px;
-    z-index: 1001;
+    z-index: 2451;
 }
 
 .color-popup::before {
@@ -156,7 +156,7 @@
     padding: 10px;
     width: 150px;
     display: none;
-    z-index: 1002;
+    z-index: 2452;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 

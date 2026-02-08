@@ -492,6 +492,24 @@ function toggleDocPanel() {
     }
 }
 
+function registerPanelActions(actions) {
+    window.gsrPanelActions = window.gsrPanelActions || {};
+    Object.assign(window.gsrPanelActions, actions);
+}
+
+function openDocPanel() {
+    docState.isPanelOpen = true;
+    docDom.docPanel.classList.remove('hidden');
+    ensureGsrFloatingPanelManager().bringToFront(docDom.docPanel);
+}
+
+function closeDocPanel() {
+    if (!docState.isPanelOpen) return;
+    docState.isPanelOpen = false;
+    docDom.docPanel.classList.add('hidden');
+    setActiveDocTab('markdown');
+}
+
 function insertTextAtCursor(textarea, text) {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
@@ -547,7 +565,7 @@ function openDocPopout() {
         }
     }, (response) => {
         if (response && response.status === 'ok') {
-            toggleDocPanel();
+            closeDocPanel();
         }
     });
 }
@@ -1066,8 +1084,8 @@ async function initializeDocTool() {
     docDom.docActivateBtn.classList.remove('hidden');
     docDom.docBorder.classList.remove('hidden');
 
-    docDom.docActivateBtn.addEventListener('click', toggleDocPanel);
-    docDom.docCloseBtn.addEventListener('click', toggleDocPanel);
+    docDom.docActivateBtn.addEventListener('click', openDocPanel);
+    docDom.docCloseBtn.addEventListener('click', closeDocPanel);
     docDom.docResizeBtn.addEventListener('click', toggleDocSize);
     docDom.docPopoutBtn.addEventListener('click', openDocPopout);
     if (docDom.docAutoSummaryBtn) {
@@ -1084,6 +1102,26 @@ async function initializeDocTool() {
     });
 
     docDom.docEditor.addEventListener('input', handleDocEditorInput);
+
+    registerPanelActions({
+        openDocPanel,
+        closeDocPanel,
+    });
+
+    if (!window.gsrPdfDoubleClickCloseRegistered) {
+        window.gsrPdfDoubleClickCloseRegistered = true;
+        document.addEventListener('dblclick', (event) => {
+            const pdfRoot = document.querySelector('.gsr-root-wrap');
+            if (!pdfRoot || !pdfRoot.contains(event.target)) return;
+            const actions = window.gsrPanelActions || {};
+            if (typeof actions.closeAiChat === 'function') {
+                actions.closeAiChat();
+            }
+            if (typeof actions.closeDocPanel === 'function') {
+                actions.closeDocPanel();
+            }
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', initializeDocTool);

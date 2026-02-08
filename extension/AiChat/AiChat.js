@@ -182,18 +182,26 @@ function makeResizable(panel) {
 }
 
 
-async function toggleChatPanel() {
-    aiChatState.isPanelOpen = !aiChatState.isPanelOpen;
-    dom.chatPanel.classList.toggle('hidden', !aiChatState.isPanelOpen);
-    if (aiChatState.isPanelOpen) {
-        ensureGsrFloatingPanelManager().bringToFront(dom.chatPanel);
-    }
-    if (aiChatState.isPanelOpen && aiChatState.tabs.length === 0) {
+function registerPanelActions(actions) {
+    window.gsrPanelActions = window.gsrPanelActions || {};
+    Object.assign(window.gsrPanelActions, actions);
+}
+
+async function openChatPanel() {
+    aiChatState.isPanelOpen = true;
+    dom.chatPanel.classList.remove('hidden');
+    ensureGsrFloatingPanelManager().bringToFront(dom.chatPanel);
+    if (aiChatState.tabs.length === 0) {
         await createNewTab();
     }
-    if (!aiChatState.isPanelOpen) {
-        hideDeleteConfirmation();
-    }
+    dom.chatDeleteBtn.classList.toggle('hidden', !aiChatState.isPanelExpanded);
+}
+
+function closeChatPanel() {
+    if (!aiChatState.isPanelOpen) return;
+    aiChatState.isPanelOpen = false;
+    dom.chatPanel.classList.add('hidden');
+    hideDeleteConfirmation();
     dom.chatDeleteBtn.classList.toggle('hidden', !aiChatState.isPanelExpanded);
 }
 
@@ -261,8 +269,8 @@ async function initializeAiChat() {
     renderActiveTabMessages();
 
     // --- Event Listeners ---
-    dom.chatActivateBtn.addEventListener('click', toggleChatPanel);
-    dom.chatCloseBtn.addEventListener('click', toggleChatPanel);
+    dom.chatActivateBtn.addEventListener('click', openChatPanel);
+    dom.chatCloseBtn.addEventListener('click', closeChatPanel);
     dom.chatResizeBtn.addEventListener('click', toggleChatSize);
     dom.newTabBtn.addEventListener('click', createNewTab);
     dom.chatSendBtn.addEventListener('click', handleSendMessage);
@@ -303,9 +311,14 @@ async function initializeAiChat() {
         }, (response) => {
             if (response && response.status === 'ok') {
                 // Hide the in-page panel after the popout is created
-                toggleChatPanel();
+                closeChatPanel();
             }
         });
+    });
+
+    registerPanelActions({
+        openAiChat: openChatPanel,
+        closeAiChat: closeChatPanel,
     });
 
 
